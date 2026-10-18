@@ -1,5 +1,6 @@
 import { BaseEntity } from 'src/infrastructure/database/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { OrderItemEntity } from '../orders/order-item.entity';
 import { ProductEntity } from './product.entity';
 
 @Entity('product_variants')
@@ -12,6 +13,9 @@ export class ProductVariantEntity extends BaseEntity {
   })
   @JoinColumn({ name: 'product_id' })
   product!: ProductEntity;
+
+  @OneToMany(() => OrderItemEntity, (item) => item.variant)
+  orderItems!: OrderItemEntity[];
 
   @Column({ type: 'varchar', length: 100, unique: true })
   sku!: string;
