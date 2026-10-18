@@ -14,6 +14,7 @@ import { CacheModule } from './infrastructure/cache/cache.module';
 import healthConfig from './infrastructure/health/health.config';
 import { HealthModule } from './infrastructure/health/health.module';
 import { GlobalResponseInterceptor } from './common/global-response.interceptor';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { GlobalResponseInterceptor } from './common/global-response.interceptor'
     HealthModule,
 
     UserModule,
+    ProductsModule,
   ],
   controllers: [],
   providers: [
