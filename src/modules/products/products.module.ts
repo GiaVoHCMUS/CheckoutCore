@@ -25,5 +25,6 @@ import { UpdateProductVariantStockUseCase } from './use-cases/update-product-var
     CreateProductVariantUseCase,
     UpdateProductVariantStockUseCase,
   ],
+  exports: [ProductVariantRepository],
 })
 export class ProductsModule {}
