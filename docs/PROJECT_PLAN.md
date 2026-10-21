@@ -139,3 +139,65 @@ Có thể dùng seed script để tạo dữ liệu test.
 - Tái hiện vấn đề trước khi triển khai giải pháp.
 - Đo lường thay vì phỏng đoán.
 - Giữ scope nhỏ, tập trung vào chiều sâu SQL và concurrency.
+
+## 8. Những kỹ năng nên bổ sung từ CheckoutCore
+
+### 1. SQL query optimization & execution plans
+
+`Ưu tiên rất cao`
+Bạn đã có kinh nghiệm với PostgreSQL, nhưng CV chưa thể hiện rõ khả năng phân tích query plan và chứng minh vì sao một truy vấn chậm, index nào hữu ích, hoặc vì sao một index không được sử dụng.
+
+- Dùng EXPLAIN (ANALYZE, BUFFERS).
+- So sánh execution plan trước và sau khi thêm index.
+- Kiểm tra sequential scan, index scan, join strategy, rows estimate và buffer reads.
+- Đo trên dataset đủ lớn và ghi lại điều kiện benchmark.
+
+Đây là kỹ năng mình ưu tiên đưa vào CV trước tiên.
+
+### 2. Idempotency & retry-safe API design
+
+`Ưu tiên rất cao`
+Idempotency key giúp bạn thể hiện tư duy xử lý retry trong các nghiệp vụ tạo đơn hàng, nơi client có thể gửi lại request vì timeout hoặc không nhận được response.
+
+- Xác định scope và vòng đời của key.
+- Xử lý hai request cùng key đến đồng thời.
+- Ngăn cùng key nhưng payload khác tạo ra hành vi sai.
+- Đảm bảo order creation và lưu trạng thái idempotency có tính nhất quán.
+- Kiểm tra retry sau khi transaction rollback hoặc response bị mất.
+
+Điểm mạnh là bạn không chỉ triển khai một header, mà chứng minh được các request trùng không gây tác dụng phụ lặp lại.
+
+### 3. Transaction isolation, locking & deadlock
+
+`Ưu tiên rất cao`
+Project đã có checkout, overselling và lock ordering. Hãy biến phần này thành một nghiên cứu có kiểm chứng:
+
+- Tái hiện race condition trước khi sửa.
+- So sánh conditional update với SELECT ... FOR UPDATE.
+- Thử nghiệm isolation levels và xác định anomaly có thể xảy ra.
+- Tái hiện deadlock với thứ tự khóa khác nhau.
+- Kiểm tra invariant: tồn kho không âm, không bán vượt số lượng cho phép.
+
+Bạn đã có concurrency control trong project hiện tại, nên giá trị bổ sung nằm ở việc giải thích các cơ chế khác nhau, trade-off và bằng chứng test, không chỉ lặp lại cụm “prevent overselling”.
+
+### 4. Benchmarking & performance analysis
+
+CV của bạn đã có k6, nên chỉ thêm một dòng “load tested with k6” sẽ không tạo nhiều khác biệt. Hãy nâng cấp cách phân tích:
+
+- Đo throughput, p95/p99 latency và error rate.
+- So sánh tải thấp với tải cao, pool connection nhỏ với pool lớn.
+- Xác minh dữ liệu sau khi tải kết thúc, không chỉ nhìn response.
+- Ghi lại cấu hình máy, database, dataset và kịch bản test.
+
+Đây là phần nối SQL optimization, concurrency và database behavior thành một câu chuyện kỹ thuật hoàn chỉnh.
+
+### 5. Reliable cancellation & inventory restoration
+
+Một điểm bổ sung khá hay từ nghiệp vụ hủy đơn:
+
+- Không hoàn tồn kho hai lần khi hai request hủy đến đồng thời.
+- Ngăn hủy đơn đã hủy.
+- Dùng state transition có điều kiện để đảm bảo chỉ một request thắng.
+- Kiểm tra rollback nếu cập nhật đơn thành công nhưng hoàn kho thất bại.
+
+Đây là một ví dụ bổ sung về state transitions và exactly-once effects trong phạm vi database transaction. Không nên tuyên bố “exactly-once delivery” ở cấp hệ thống nếu chưa triển khai các cơ chế tương ứng.
