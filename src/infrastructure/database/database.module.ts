@@ -19,6 +19,7 @@ import { TransactionService } from './transaction.service';
         autoLoadEntities: true,
 
         synchronize: false,
+        logging: ['query', 'error'],
       }),
     }),
   ],
