@@ -1,0 +1,626 @@
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, status, total_amount, created_at, updated_at, cancelled_at
+FROM orders
+ORDER BY created_at DESC, id DESC
+LIMIT 51;
+
+1. Không index:
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=57.241..62.176 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=57.238..62.169 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=52.295..52.300 rows=41 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.012..18.168 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.072 ms
+Execution Time: 62.255 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=61.624..66.353 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=61.621..66.344 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=57.264..57.270 rows=40 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.012..19.913 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.086 ms
+Execution Time: 66.440 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=53.496..58.435 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=53.493..58.423 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=49.137..49.142 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.014..17.075 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.084 ms
+Execution Time: 58.520 ms
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=52.806..56.922 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=52.804..56.914 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=48.602..48.606 rows=41 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.013..16.892 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.191 ms
+Execution Time: 57.063 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=66.068..71.295 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=66.066..71.289 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=58.034..58.038 rows=40 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.015..20.162 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.107 ms
+Execution Time: 71.377 ms
+
+
+2. Index sắp xếp — (created_at, id)
+
+Limit  (cost=0.42..4.17 rows=51 width=54) (actual time=0.037..0.112 rows=51 loops=1)
+  Buffers: shared hit=54
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..44020.49 rows=600005 width=54) (actual time=0.036..0.108 rows=51 loops=1)
+        Buffers: shared hit=54
+Planning Time: 0.083 ms
+Execution Time: 0.154 ms
+
+
+Limit  (cost=0.42..4.17 rows=51 width=54) (actual time=0.054..0.119 rows=51 loops=1)
+  Buffers: shared hit=54
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..44020.49 rows=600005 width=54) (actual time=0.052..0.114 rows=51 loops=1)
+        Buffers: shared hit=54
+Planning Time: 0.076 ms
+Execution Time: 0.153 ms
+
+
+Limit  (cost=0.42..4.17 rows=51 width=54) (actual time=0.060..0.128 rows=51 loops=1)
+  Buffers: shared hit=54
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..44020.49 rows=600005 width=54) (actual time=0.059..0.124 rows=51 loops=1)
+        Buffers: shared hit=54
+Planning Time: 0.073 ms
+Execution Time: 0.164 ms
+
+
+Limit  (cost=0.42..4.17 rows=51 width=54) (actual time=0.069..0.142 rows=51 loops=1)
+  Buffers: shared hit=54
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..44020.49 rows=600005 width=54) (actual time=0.067..0.137 rows=51 loops=1)
+        Buffers: shared hit=54
+Planning Time: 0.079 ms
+Execution Time: 0.183 ms
+
+
+Limit  (cost=0.42..4.17 rows=51 width=54) (actual time=0.054..0.143 rows=51 loops=1)
+  Buffers: shared hit=54
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..44020.49 rows=600005 width=54) (actual time=0.053..0.138 rows=51 loops=1)
+        Buffers: shared hit=54
+Planning Time: 0.076 ms
+Execution Time: 0.179 ms
+
+
+3. Thử riêng index status
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=52.557..56.626 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=52.554..56.617 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=48.564..48.570 rows=40 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.012..17.241 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.072 ms
+Execution Time: 56.699 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=51.614..56.082 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=51.611..56.073 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=47.178..47.183 rows=41 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.009..16.532 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.078 ms
+Execution Time: 56.146 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=84.872..92.192 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=84.870..92.182 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=80.039..80.046 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.012..29.771 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.137 ms
+Execution Time: 92.289 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=47.810..51.672 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=47.807..51.661 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=43.274..43.279 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.014..15.531 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.127 ms
+Execution Time: 51.741 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=53.904..58.020 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=53.902..58.011 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=49.914..49.919 rows=41 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.011..17.554 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.203 ms
+Execution Time: 58.100 ms
+
+
+4. Composite index — (status, created_at, id)
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=54.594..59.413 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=54.591..59.398 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=49.984..49.990 rows=43 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.031..17.365 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.085 ms
+Execution Time: 59.528 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=58.460..62.229 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=58.458..62.221 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=53.951..53.956 rows=40 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.014..18.652 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.104 ms
+Execution Time: 62.316 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=50.605..54.167 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=50.603..54.158 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=45.779..45.785 rows=41 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 32kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.010..16.791 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.083 ms
+Execution Time: 54.238 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=59.633..64.109 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=59.630..64.101 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=52.264..52.270 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 33kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.012..18.305 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.080 ms
+Execution Time: 64.172 ms
+
+
+Limit  (cost=17626.64..17632.59 rows=51 width=54) (actual time=52.991..57.820 rows=51 loops=1)
+  Buffers: shared hit=5876
+  ->  Gather Merge  (cost=17626.64..75964.52 rows=500004 width=54) (actual time=52.988..57.811 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5876
+        ->  Sort  (cost=16626.62..17251.62 rows=250002 width=54) (actual time=47.795..47.801 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 33kB
+              Buffers: shared hit=5876
+              Worker 0:  Sort Method: top-N heapsort  Memory: 33kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 32kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8286.02 rows=250002 width=54) (actual time=0.008..17.118 rows=200002 loops=3)
+                    Buffers: shared hit=5786
+Planning Time: 0.087 ms
+Execution Time: 57.889 ms
+
+
+
+=======================================================================================
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, status, total_amount, created_at, updated_at, cancelled_at
+FROM orders
+WHERE status = 'cancelled'
+ORDER BY created_at DESC, id DESC
+LIMIT 51;
+
+1. Không index:
+
+Limit  (cost=10308.63..10314.58 rows=51 width=54) (actual time=27.977..32.109 rows=51 loops=1)
+  Buffers: shared hit=5264 read=612
+  ->  Gather Merge  (cost=10308.63..13089.45 rows=23834 width=54) (actual time=27.974..32.101 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5264 read=612
+        ->  Sort  (cost=9308.60..9338.40 rows=11917 width=54) (actual time=23.419..23.426 rows=43 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=5264 read=612
+              Worker 0:  Sort Method: top-N heapsort  Memory: 37kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 37kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8911.03 rows=11917 width=54) (actual time=0.045..21.656 rows=10000 loops=3)
+                    Filter: ((status)::text = 'cancelled'::text)
+                    Rows Removed by Filter: 190002
+                    Buffers: shared hit=5174 read=612
+Planning Time: 0.081 ms
+Execution Time: 32.176 ms
+
+
+Limit  (cost=10308.63..10314.58 rows=51 width=54) (actual time=34.117..38.431 rows=51 loops=1)
+  Buffers: shared hit=5303 read=573
+  ->  Gather Merge  (cost=10308.63..13089.45 rows=23834 width=54) (actual time=34.115..38.423 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5303 read=573
+        ->  Sort  (cost=9308.60..9338.40 rows=11917 width=54) (actual time=30.192..30.198 rows=40 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=5303 read=573
+              Worker 0:  Sort Method: top-N heapsort  Memory: 37kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 38kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8911.03 rows=11917 width=54) (actual time=0.065..28.268 rows=10000 loops=3)
+                    Filter: ((status)::text = 'cancelled'::text)
+                    Rows Removed by Filter: 190002
+                    Buffers: shared hit=5213 read=573
+Planning Time: 0.342 ms
+Execution Time: 38.604 ms
+
+
+Limit  (cost=10308.63..10314.58 rows=51 width=54) (actual time=28.475..33.157 rows=51 loops=1)
+  Buffers: shared hit=5389 read=487
+  ->  Gather Merge  (cost=10308.63..13089.45 rows=23834 width=54) (actual time=28.473..33.139 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5389 read=487
+        ->  Sort  (cost=9308.60..9338.40 rows=11917 width=54) (actual time=24.666..24.672 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=5389 read=487
+              Worker 0:  Sort Method: top-N heapsort  Memory: 36kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 37kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8911.03 rows=11917 width=54) (actual time=0.046..23.001 rows=10000 loops=3)
+                    Filter: ((status)::text = 'cancelled'::text)
+                    Rows Removed by Filter: 190002
+                    Buffers: shared hit=5299 read=487
+Planning Time: 0.096 ms
+Execution Time: 33.233 ms
+
+
+Limit  (cost=10308.63..10314.58 rows=51 width=54) (actual time=27.569..32.009 rows=51 loops=1)
+  Buffers: shared hit=5447 read=429
+  ->  Gather Merge  (cost=10308.63..13089.45 rows=23834 width=54) (actual time=27.567..32.002 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5447 read=429
+        ->  Sort  (cost=9308.60..9338.40 rows=11917 width=54) (actual time=22.898..22.903 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=5447 read=429
+              Worker 0:  Sort Method: top-N heapsort  Memory: 36kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 36kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8911.03 rows=11917 width=54) (actual time=0.040..21.233 rows=10000 loops=3)
+                    Filter: ((status)::text = 'cancelled'::text)
+                    Rows Removed by Filter: 190002
+                    Buffers: shared hit=5357 read=429
+Planning Time: 0.080 ms
+Execution Time: 32.094 ms
+
+
+Limit  (cost=10308.63..10314.58 rows=51 width=54) (actual time=26.504..31.180 rows=51 loops=1)
+  Buffers: shared hit=5479 read=397
+  ->  Gather Merge  (cost=10308.63..13089.45 rows=23834 width=54) (actual time=26.501..31.172 rows=51 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5479 read=397
+        ->  Sort  (cost=9308.60..9338.40 rows=11917 width=54) (actual time=22.582..22.587 rows=42 loops=3)
+"              Sort Key: created_at DESC, id DESC"
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=5479 read=397
+              Worker 0:  Sort Method: top-N heapsort  Memory: 37kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 36kB
+              ->  Parallel Seq Scan on orders  (cost=0.00..8911.03 rows=11917 width=54) (actual time=0.037..20.955 rows=10000 loops=3)
+                    Filter: ((status)::text = 'cancelled'::text)
+                    Rows Removed by Filter: 190002
+                    Buffers: shared hit=5389 read=397
+Planning Time: 0.080 ms
+Execution Time: 31.244 ms
+
+
+
+
+
+2. Index sắp xếp — (created_at, id)
+
+Limit  (cost=0.42..81.60 rows=51 width=54) (actual time=0.243..1.456 rows=51 loops=1)
+  Buffers: shared hit=1018
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..45520.50 rows=28600 width=54) (actual time=0.242..1.448 rows=51 loops=1)
+        Filter: ((status)::text = 'cancelled'::text)
+        Rows Removed by Filter: 954
+        Buffers: shared hit=1018
+Planning Time: 0.139 ms
+Execution Time: 1.559 ms
+
+
+Limit  (cost=0.42..81.60 rows=51 width=54) (actual time=0.190..1.059 rows=51 loops=1)
+  Buffers: shared hit=1018
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..45520.50 rows=28600 width=54) (actual time=0.189..1.054 rows=51 loops=1)
+        Filter: ((status)::text = 'cancelled'::text)
+        Rows Removed by Filter: 954
+        Buffers: shared hit=1018
+Planning Time: 0.085 ms
+Execution Time: 1.123 ms
+
+
+Limit  (cost=0.42..81.60 rows=51 width=54) (actual time=0.201..1.039 rows=51 loops=1)
+  Buffers: shared hit=1018
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..45520.50 rows=28600 width=54) (actual time=0.200..1.035 rows=51 loops=1)
+        Filter: ((status)::text = 'cancelled'::text)
+        Rows Removed by Filter: 954
+        Buffers: shared hit=1018
+Planning Time: 0.086 ms
+Execution Time: 1.108 ms
+
+
+
+Limit  (cost=0.42..81.60 rows=51 width=54) (actual time=0.181..0.918 rows=51 loops=1)
+  Buffers: shared hit=1018
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..45520.50 rows=28600 width=54) (actual time=0.180..0.914 rows=51 loops=1)
+        Filter: ((status)::text = 'cancelled'::text)
+        Rows Removed by Filter: 954
+        Buffers: shared hit=1018
+Planning Time: 0.085 ms
+Execution Time: 0.981 ms
+
+
+Limit  (cost=0.42..81.60 rows=51 width=54) (actual time=0.203..0.919 rows=51 loops=1)
+  Buffers: shared hit=1018
+  ->  Index Scan Backward using idx_orders_created_id on orders  (cost=0.42..45520.50 rows=28600 width=54) (actual time=0.202..0.914 rows=51 loops=1)
+        Filter: ((status)::text = 'cancelled'::text)
+        Rows Removed by Filter: 954
+        Buffers: shared hit=1018
+Planning Time: 0.082 ms
+Execution Time: 0.976 ms
+
+
+3. Thử riêng index status
+
+Limit  (cost=7419.73..7419.86 rows=51 width=54) (actual time=18.549..18.560 rows=51 loops=1)
+  Buffers: shared hit=5795
+  ->  Sort  (cost=7419.73..7491.23 rows=28600 width=54) (actual time=18.547..18.554 rows=51 loops=1)
+"        Sort Key: created_at DESC, id DESC"
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=5795
+        ->  Bitmap Heap Scan on orders  (cost=322.07..6465.57 rows=28600 width=54) (actual time=2.682..15.025 rows=30000 loops=1)
+              Recheck Cond: ((status)::text = 'cancelled'::text)
+              Heap Blocks: exact=5767
+              Buffers: shared hit=5795
+              ->  Bitmap Index Scan on idx_orders_status  (cost=0.00..314.93 rows=28600 width=0) (actual time=1.885..1.886 rows=30000 loops=1)
+                    Index Cond: ((status)::text = 'cancelled'::text)
+                    Buffers: shared hit=28
+Planning Time: 0.161 ms
+Execution Time: 18.774 ms
+
+
+Limit  (cost=7419.73..7419.86 rows=51 width=54) (actual time=17.684..17.697 rows=51 loops=1)
+  Buffers: shared hit=5795
+  ->  Sort  (cost=7419.73..7491.23 rows=28600 width=54) (actual time=17.681..17.690 rows=51 loops=1)
+"        Sort Key: created_at DESC, id DESC"
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=5795
+        ->  Bitmap Heap Scan on orders  (cost=322.07..6465.57 rows=28600 width=54) (actual time=2.177..14.886 rows=30000 loops=1)
+              Recheck Cond: ((status)::text = 'cancelled'::text)
+              Heap Blocks: exact=5767
+              Buffers: shared hit=5795
+              ->  Bitmap Index Scan on idx_orders_status  (cost=0.00..314.93 rows=28600 width=0) (actual time=1.407..1.408 rows=30000 loops=1)
+                    Index Cond: ((status)::text = 'cancelled'::text)
+                    Buffers: shared hit=28
+Planning Time: 0.181 ms
+Execution Time: 17.828 ms
+
+
+Limit  (cost=7419.73..7419.86 rows=51 width=54) (actual time=13.453..13.465 rows=51 loops=1)
+  Buffers: shared hit=5795
+  ->  Sort  (cost=7419.73..7491.23 rows=28600 width=54) (actual time=13.451..13.459 rows=51 loops=1)
+"        Sort Key: created_at DESC, id DESC"
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=5795
+        ->  Bitmap Heap Scan on orders  (cost=322.07..6465.57 rows=28600 width=54) (actual time=2.133..10.989 rows=30000 loops=1)
+              Recheck Cond: ((status)::text = 'cancelled'::text)
+              Heap Blocks: exact=5767
+              Buffers: shared hit=5795
+              ->  Bitmap Index Scan on idx_orders_status  (cost=0.00..314.93 rows=28600 width=0) (actual time=1.387..1.388 rows=30000 loops=1)
+                    Index Cond: ((status)::text = 'cancelled'::text)
+                    Buffers: shared hit=28
+Planning Time: 0.097 ms
+Execution Time: 13.601 ms
+
+
+Limit  (cost=7419.73..7419.86 rows=51 width=54) (actual time=16.832..16.845 rows=51 loops=1)
+  Buffers: shared hit=5795
+  ->  Sort  (cost=7419.73..7491.23 rows=28600 width=54) (actual time=16.829..16.838 rows=51 loops=1)
+"        Sort Key: created_at DESC, id DESC"
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=5795
+        ->  Bitmap Heap Scan on orders  (cost=322.07..6465.57 rows=28600 width=54) (actual time=2.013..14.292 rows=30000 loops=1)
+              Recheck Cond: ((status)::text = 'cancelled'::text)
+              Heap Blocks: exact=5767
+              Buffers: shared hit=5795
+              ->  Bitmap Index Scan on idx_orders_status  (cost=0.00..314.93 rows=28600 width=0) (actual time=1.348..1.349 rows=30000 loops=1)
+                    Index Cond: ((status)::text = 'cancelled'::text)
+                    Buffers: shared hit=28
+Planning Time: 0.113 ms
+Execution Time: 16.974 ms
+
+
+Limit  (cost=7419.73..7419.86 rows=51 width=54) (actual time=12.951..12.962 rows=51 loops=1)
+  Buffers: shared hit=5795
+  ->  Sort  (cost=7419.73..7491.23 rows=28600 width=54) (actual time=12.949..12.956 rows=51 loops=1)
+"        Sort Key: created_at DESC, id DESC"
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=5795
+        ->  Bitmap Heap Scan on orders  (cost=322.07..6465.57 rows=28600 width=54) (actual time=2.202..10.580 rows=30000 loops=1)
+              Recheck Cond: ((status)::text = 'cancelled'::text)
+              Heap Blocks: exact=5767
+              Buffers: shared hit=5795
+              ->  Bitmap Index Scan on idx_orders_status  (cost=0.00..314.93 rows=28600 width=0) (actual time=1.484..1.485 rows=30000 loops=1)
+                    Index Cond: ((status)::text = 'cancelled'::text)
+                    Buffers: shared hit=28
+Planning Time: 0.087 ms
+Execution Time: 13.075 ms
+
+
+
+4. Composite index — (status, created_at, id)
+
+Limit  (cost=0.42..35.58 rows=51 width=54) (actual time=0.090..0.180 rows=51 loops=1)
+  Buffers: shared hit=52 read=4
+  ->  Index Scan Backward using idx_orders_status_created_id on orders  (cost=0.42..19715.33 rows=28600 width=54) (actual time=0.089..0.175 rows=51 loops=1)
+        Index Cond: ((status)::text = 'cancelled'::text)
+        Buffers: shared hit=52 read=4
+Planning:
+  Buffers: shared hit=22 read=1
+Planning Time: 0.431 ms
+Execution Time: 0.217 ms
+
+
+Limit  (cost=0.42..35.58 rows=51 width=54) (actual time=0.033..0.109 rows=51 loops=1)
+  Buffers: shared hit=56
+  ->  Index Scan Backward using idx_orders_status_created_id on orders  (cost=0.42..19715.33 rows=28600 width=54) (actual time=0.032..0.105 rows=51 loops=1)
+        Index Cond: ((status)::text = 'cancelled'::text)
+        Buffers: shared hit=56
+Planning Time: 0.086 ms
+Execution Time: 0.162 ms
+
+
+Limit  (cost=0.42..35.58 rows=51 width=54) (actual time=0.062..0.152 rows=51 loops=1)
+  Buffers: shared hit=56
+  ->  Index Scan Backward using idx_orders_status_created_id on orders  (cost=0.42..19715.33 rows=28600 width=54) (actual time=0.061..0.147 rows=51 loops=1)
+        Index Cond: ((status)::text = 'cancelled'::text)
+        Buffers: shared hit=56
+Planning Time: 0.086 ms
+Execution Time: 0.191 ms
+
+
+Limit  (cost=0.42..35.58 rows=51 width=54) (actual time=0.037..0.114 rows=51 loops=1)
+  Buffers: shared hit=56
+  ->  Index Scan Backward using idx_orders_status_created_id on orders  (cost=0.42..19715.33 rows=28600 width=54) (actual time=0.035..0.109 rows=51 loops=1)
+        Index Cond: ((status)::text = 'cancelled'::text)
+        Buffers: shared hit=56
+Planning Time: 0.095 ms
+Execution Time: 0.157 ms
+
+
+Limit  (cost=0.42..35.58 rows=51 width=54) (actual time=0.034..0.104 rows=51 loops=1)
+  Buffers: shared hit=56
+  ->  Index Scan Backward using idx_orders_status_created_id on orders  (cost=0.42..19715.33 rows=28600 width=54) (actual time=0.033..0.100 rows=51 loops=1)
+        Index Cond: ((status)::text = 'cancelled'::text)
+        Buffers: shared hit=56
+Planning Time: 0.089 ms
+Execution Time: 0.145 ms
