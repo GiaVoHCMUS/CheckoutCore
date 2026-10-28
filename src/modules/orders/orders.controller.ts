@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CursorPaginationMeta } from 'src/common/pagination/cursor-pagination.meta';
 import { CursorPaginationQueryDto } from 'src/common/pagination/dto/cursor-pagination-query.dto';
@@ -34,6 +34,7 @@ export class OrdersController {
   }
 
   @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: OrderResultDto })
   @ApiNotFoundResponse()
   @ApiConflictResponse({ description: 'The order is no longer pending and cannot be cancelled.' })
