@@ -1,0 +1,125 @@
+1. No Index
+
+PS C:\Coding\CheckoutCore> k6 run -e BASE_URL=http://localhost:3000 -e VUS=20 -e HOLD_DURATION=2m -e EXPERIMENT=no-index .\k6\orders-list.load.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: .\k6\orders-list.load.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 20 max VUs, 3m30s max duration (incl. graceful stop):
+              * default: Up to 20 looping VUs for 3m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✗ 'p(95)<1000' p(95)=1.49s
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 7220    40.107039/s
+    checks_succeeded...: 100.00% 7220 out of 7220
+    checks_failed......: 0.00%   0 out of 7220
+
+    ✓ GET /api/v1/orders returns 200
+    ✓ response contains paginated items
+
+    HTTP
+    http_req_duration..............: avg=836.1ms min=49.62ms med=831.12ms max=2.91s p(90)=1.32s p(95)=1.49s
+      { expected_response:true }...: avg=836.1ms min=49.62ms med=831.12ms max=2.91s p(90)=1.32s p(95)=1.49s
+    http_req_failed................: 0.00%  0 out of 3610
+    http_reqs......................: 3610   20.05352/s
+
+    EXECUTION
+    iteration_duration.............: avg=836.9ms min=49.62ms med=831.63ms max=2.91s p(90)=1.32s p(95)=1.49s
+    iterations.....................: 3610   20.05352/s
+    vus............................: 1      min=1         max=20
+    vus_max........................: 20     min=20        max=20
+
+    NETWORK
+    data_received..................: 36 MB  200 kB/s
+    data_sent......................: 426 kB 2.4 kB/s
+
+
+
+
+running (3m00.0s), 00/20 VUs, 3610 complete and 0 interrupted iterations
+default ✓ [======================================] 00/20 VUs  3m0s
+ERRO[0180] thresholds on metrics 'http_req_duration' have been crossed 
+
+
+
+
+=====================
+
+2. Have index
+
+PS C:\Coding\CheckoutCore> k6 run -e BASE_URL=http://localhost:3000 -e VUS=20 -e HOLD_DURATION=2m -e EXPERIMENT=created-at-id-index .\k6\orders-list.load.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: .\k6\orders-list.load.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 20 max VUs, 3m30s max duration (incl. graceful stop):
+              * default: Up to 20 looping VUs for 3m0s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<1000' p(95)=76.52ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 128582  714.34211/s
+    checks_succeeded...: 100.00% 128582 out of 128582
+    checks_failed......: 0.00%   0 out of 128582
+
+    ✓ GET /api/v1/orders returns 200
+    ✓ response contains paginated items
+
+    HTTP
+    http_req_duration..............: avg=46.54ms min=1.51ms med=48.85ms max=259.95ms p(90)=69.41ms p(95)=76.52ms
+      { expected_response:true }...: avg=46.54ms min=1.51ms med=48.85ms max=259.95ms p(90)=69.41ms p(95)=76.52ms
+    http_req_failed................: 0.00%  0 out of 64291
+    http_reqs......................: 64291  357.171055/s
+
+    EXECUTION
+    iteration_duration.............: avg=46.87ms min=1.73ms med=49.15ms max=260.48ms p(90)=69.85ms p(95)=76.96ms
+    iterations.....................: 64291  357.171055/s
+    vus............................: 1      min=1          max=20
+    vus_max........................: 20     min=20         max=20
+
+    NETWORK
+    data_received..................: 641 MB 3.6 MB/s
+    data_sent......................: 7.6 MB 42 kB/s
+
+
+
+
+running (3m00.0s), 00/20 VUs, 64291 complete and 0 interrupted iterations
+default ✓ [======================================] 00/20 VUs  3m0s
