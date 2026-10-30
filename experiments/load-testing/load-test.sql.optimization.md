@@ -55,25 +55,48 @@ k6 run -e BASE_URL=http://localhost:3000 -e VUS=20 -e HOLD_DURATION=2m -e EXPERI
 
 Mỗi lượt gồm 30 giây tăng tải, 2 phút giữ tải ở mức 20 VU, rồi 30 giây giảm tải. Các giá trị `VUS` và `HOLD_DURATION` có thể đổi, nhưng phải giống nhau giữa hai lượt. Không chạy hai lượt đồng thời.
 
-## Kết quả
+## Điều kiện đo
 
-Điền số liệu từ summary của k6 sau khi chạy cả hai lượt. So sánh `http_req_duration` p50/p90/p95/p99, `http_reqs` (request rate), `http_req_failed` và số lượng request. Ghi lại thêm dataset, phiên bản PostgreSQL, cấu hình máy và thời điểm chạy.
+- Nguồn số liệu: [`benchmark.txt`](./benchmark.txt). File hiện ghi **3 cặp đo, tức 3 lượt mỗi cấu hình (6 lượt tổng cộng)**, theo thứ tự không index → có index trong từng cặp.
+- K6 chạy local, gọi `http://localhost:3000/api/v1/orders?limit=50`. Mỗi iteration gửi một GET tới trang đầu; không thử các cursor ở trang sâu.
+- Kịch bản: tăng dần tới 20 VU trong 30 giây, giữ 20 VU trong 2 phút, giảm về 0 trong 30 giây; mỗi lượt chạy khoảng 3 phút. Đây là mô hình VU lặp liên tục, nên số requests/s thay đổi theo tốc độ phản hồi của API.
+- Mỗi response được kiểm tra HTTP 200 và có `data` dạng mảng cùng `meta`. Threshold: `checks > 99%`, `http_req_failed < 1%`, `http_req_duration p95 < 1.000 ms`.
+- Dataset: khoảng 600K orders theo thí nghiệm SQL trước; output k6 không tự xác nhận số row hoặc việc dataset giữ nguyên suốt 6 lượt.
+- Code hiện tại đã comment cấu hình TypeORM `logging: ['query', 'error']`; output k6 không chứng minh trạng thái log của process API trong từng lượt. Thông tin phiên bản PostgreSQL, cấu hình máy và thời điểm đo cụ thể chưa được ghi trong file nguồn.
 
-| Cấu hình | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Requests/s | Failed (%) | Tổng requests |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Không có index thử nghiệm | 831.12 | 1,320 | 1,490 | — | 20.05 | 0.00% | 3,610 |
-| Có `(created_at, id)` | 48.85 | 69.41 | 76.52 | — | 357.17 | 0.00% | 64,291 |
+## Kết quả từng lượt
 
-`p99` không có trong output k6 đã lưu nên chưa điền. Các requests đều trả HTTP 200 và cả hai lượt có 100% checks thành công. Lượt không index vượt threshold `p(95)<1000ms` (p95 thực tế 1.49s); lượt có index đạt threshold (76.52ms).
+Tất cả thời gian dưới đây là `http_req_duration` theo milliseconds; `requests/s` và tổng requests lấy từ `http_reqs`. Đơn vị giây trong output gốc đã được đổi sang ms.
 
-### Ghi chú lần chạy
+| Cặp | Cấu hình | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Requests/s | Tổng requests | HTTP failed | Checks |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | Không index | 849,94 | 1.310 | 1.430 | 1.760 | 19,84 | 3.572 | 0% | 100% |
+| 1 | Có `(created_at, id)` | 36,43 | 65,98 | 91,12 | 143,27 | 412,44 | 74.242 | 0% | 100% |
+| 2 | Không index | 914,14 | 1.440 | 1.670 | 2.120 | 18,02 | 3.244 | 0% | 100% |
+| 2 | Có `(created_at, id)` | 37,85 | 51,45 | 61,25 | 99,96 | 449,29 | 80.874 | 0% | 100% |
+| 3 | Không index | 855,05 | 1.340 | 1.500 | 1.910 | 19,48 | 3.507 | 0% | 100% |
+| 3 | Có `(created_at, id)` | 34,56 | 44,20 | 50,04 | 89,16 | 507,62 | 91.372 | 0% | 100% |
 
-- Dataset / số orders: khoảng 600K orders (theo benchmark SQL trước đó; cần xác nhận DB không thay đổi giữa các lượt)
-- VU / thời gian giữ tải: 20 / 2 phút
-- Máy chạy API và PostgreSQL: —
-- Cấu hình log SQL: —
-- Mỗi cấu hình chỉ có một lượt đo trong output hiện có; chạy lại nhiều lần sẽ giúp giảm ảnh hưởng của cache và dao động tải máy.
+### Median giữa các lượt
 
-## Diễn giải
+Median ở bảng này được tính **trên 3 giá trị của từng cấu hình**, không gộp toàn bộ requests của nhiều lượt thành một phân phối.
 
-Trong hai lượt đơn lẻ này, index `(created_at, id)` đi cùng p95 thấp hơn khoảng 19.5 lần (1,490 ms xuống 76.52 ms), p50 thấp hơn khoảng 17 lần (831.12 ms xuống 48.85 ms), và request rate cao hơn khoảng 17.8 lần (20.05 lên 357.17 requests/s). Đây là mối liên hệ quan sát được trong lần chạy này, chưa đủ để tách riêng ảnh hưởng của index khỏi cache và các yếu tố thời điểm chạy. API còn chịu ảnh hưởng của NestJS, connection pool, logging, cache hệ điều hành/PostgreSQL và tài nguyên máy; nên chạy nhiều lượt luân phiên trước khi xem đây là kết quả ổn định. Đây là benchmark local, không đại diện trực tiếp cho production.
+| Cấu hình | p50 (ms) | p90 (ms) | p95 (ms) | p99 (ms) | Requests/s | Tổng requests/lượt |
+|---|---:|---:|---:|---:|---:|---:|
+| Không index | 855,05 | 1.340 | 1.500 | 1.910 | 19,48 | 3.507 |
+| Có `(created_at, id)` | 36,43 | 51,45 | 61,25 | 99,96 | 449,29 | 80.874 |
+
+### So sánh theo cặp
+
+| Cặp | p95 không index → có index | p95 thấp hơn | Requests/s không index → có index | Requests/s cao hơn |
+|---:|---:|---:|---:|---:|
+| 1 | 1.430 → 91,12 ms | 15,69 lần | 19,84 → 412,44 | 20,78 lần |
+| 2 | 1.670 → 61,25 ms | 27,27 lần | 18,02 → 449,29 | 24,94 lần |
+| 3 | 1.500 → 50,04 ms | 29,98 lần | 19,48 → 507,62 | 26,06 lần |
+
+## Kết luận
+
+- Cả 3 lượt không index đều vượt ngưỡng p95 < 1.000 ms; cả 3 lượt có index đều đạt ngưỡng. Tất cả 6 lượt có 0% HTTP failed và 100% checks thành công. Dòng `ERRO` ở lượt không index là do **threshold latency**, không phải request HTTP lỗi.
+- Tính theo median của 3 lượt mỗi cấu hình, p95 giảm từ **1.500 ms xuống 61,25 ms** (khoảng **24,49 lần**) và throughput tăng từ **19,48 lên 449,29 requests/s** (khoảng **23,06 lần**). p99 giảm từ **1.910 ms xuống 99,96 ms**.
+- Trong cả 3 cặp, cấu hình có index đều có p95 thấp hơn và requests/s cao hơn rõ rệt. Kết quả phù hợp với benchmark SQL của query lấy orders mới nhất: index `(created_at, id)` hỗ trợ thứ tự `ORDER BY created_at DESC, id DESC` và `LIMIT 51`.
+- Đây là kết quả local cho trang đầu của API với 20 VU. Chưa có thông tin đầy đủ về máy, trạng thái cache và các yếu tố tải khác; vì vậy các tỷ lệ trên mô tả **lần thử này**, không phải cam kết hiệu năng production.
